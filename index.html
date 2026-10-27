@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PokéWeb Global - Multilingüe Pro + Living Dex</title>
@@ -39,6 +38,8 @@
             align-items: center;
             border-bottom: 4px solid #232323;
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            flex-wrap: wrap;
+            gap: 15px;
         }
 
         nav .logo {
@@ -72,6 +73,29 @@
             display: flex;
             gap: 15px;
             align-items: center;
+            flex-wrap: wrap;
+        }
+
+        /* Botón de Lobby */
+        .lobby-btn {
+            background-color: #1e293b;
+            color: white;
+            padding: 6px 14px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            border: 2px solid #232323;
+            border-radius: 8px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .lobby-btn:hover {
+            background-color: var(--shiny-gold);
+            color: #1e293b;
         }
 
         /* Interruptor de Modo (Pokédex vs Living Dex) */
@@ -348,11 +372,11 @@
             border-radius: 50%;
             cursor: pointer;
             transition: background-color 0.2s;
-            display: none; /* Se activa dinámicamente */
+            display: none;
         }
         
         .living-dex-mode .capture-btn {
-            display: block; /* Solo se muestra si estamos en la vista de Living Dex */
+            display: block;
         }
 
         .poke-card.captured .capture-btn {
@@ -372,6 +396,9 @@
     <nav>
         <div class="logo"><div class="logo-ball"></div> POKÉWEB GLOBAL</div>
         <div class="nav-controls">
+            <!-- Botón de Retorno al Lobby añadido -->
+            <a href="https://flxnowgames-tech.github.io/lobby/" class="lobby-btn">🏠 Lobby</a>
+            
             <div class="mode-toggle-container">
                 <button id="mode-pokedex" class="mode-btn active">Pokédex</button>
                 <button id="mode-livingdex" class="mode-btn">Living Dex</button>
@@ -605,7 +632,6 @@
                 gridList.classList.remove('living-dex-mode');
                 gridTitle.textContent = i18n[currentLang].regTitle;
                 
-                // Mostrar todos los Pokémon en modo clásico
                 const cards = document.querySelectorAll('.poke-card');
                 cards.forEach(card => card.style.display = 'block');
             } else {
@@ -616,7 +642,6 @@
             }
         }
 
-        // Renderiza la caja actual calculando rangos
         function renderActiveBox() {
             const startId = (currentBox - 1) * 30 + 1;
             const endId = Math.min(currentBox * 30, TOTAL_POKEMON);
@@ -640,22 +665,19 @@
             gridTitle.textContent = `Living Dex - Caja ${currentBox} (${start} - ${end}) • Haz scroll para cambiar de caja`;
         }
 
-        // DETECTOR DE SCROLL: Cambiar de caja con la rueda del ratón
         gridList.addEventListener('wheel', (e) => {
-            if (currentViewMode !== 'livingdex') return; // Solo funciona en modo Living Dex
+            if (currentViewMode !== 'livingdex') return;
             
-            e.preventDefault(); // Evita el scroll normal de la web
+            e.preventDefault();
 
             const totalBoxes = Math.ceil(TOTAL_POKEMON / 30);
 
             if (e.deltaY > 0) {
-                // Scroll hacia abajo -> Siguiente Caja
                 if (currentBox < totalBoxes) {
                     currentBox++;
                     renderActiveBox();
                 }
             } else {
-                // Scroll hacia arriba -> Caja Anterior
                 if (currentBox > 1) {
                     currentBox--;
                     renderActiveBox();
@@ -701,7 +723,6 @@
                 regionalToggle.disabled = true;
                 detectedRegionName = '';
 
-                // 1. Cargar Datos Base
                 const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${idOrName.toString().toLowerCase()}`);
                 if(!response.ok) return;
                 const data = await response.json();
@@ -717,7 +738,6 @@
                 lblWeight.textContent = `${(data.weight / 10).toFixed(1)} kg`;
                 lblGeneration.textContent = getGenerationString(data.id);
 
-                // 2. Comprobar Formas Regionales y extraer su Info textuall
                 try {
                     const speciesResponseForForms = await fetch(`https://pokeapi.co/api/v2/pokemon-species/${currentPokemonId}/`);
                     if(speciesResponseForForms.ok) {
@@ -730,7 +750,6 @@
                                 v.pokemon.name.includes('-paldea')
                             );
                             if(regionalVariety) {
-                                // Guardar el nombre de la region con la primera letra Mayuscula
                                 const match = regionalVariety.pokemon.name.match(/-(alola|galar|hisui|paldea)/);
                                 if(match) detectedRegionName = match[1].charAt(0).toUpperCase() + match[1].slice(1);
                                 
@@ -746,13 +765,11 @@
                     }
                 } catch(err) { console.log("Sin variantes regionales."); }
 
-                // 3. Obtener Descripciones en base al Idioma Seleccionado
                 const speciesResponse = await fetch(`https://pokeapi.co/api/v2/pokemon-species/${currentPokemonId}/`);
                 if (speciesResponse.ok) {
                     const speciesData = await speciesResponse.json();
                     const genderRate = speciesData.gender_rate;
 
-                    // Bloqueos de Género
                     if (genderRate === -1) {
                         btnMale.disabled = true; btnFemale.disabled = true;
                         btnMale.classList.remove('active-male'); btnFemale.classList.remove('active-female');
@@ -771,18 +788,15 @@
                         }
                     }
 
-                    // Filtrar entradas por idioma actual de la app
                     const matchedEntries = speciesData.flavor_text_entries.filter(entry => entry.language.name === currentLang);
                     
                     if (matchedEntries.length > 0) {
                         const primaryText = matchedEntries[0].flavor_text.replace(/[\n\f]/g, ' ');
                         const secondaryText = matchedEntries[1] ? matchedEntries[1].flavor_text.replace(/[\n\f]/g, ' ') : primaryText;
                         
-                        // Si está activada la variante regional usamos textos lejanos si existen
                         cachedBaseDescriptions.male = primaryText;
                         cachedBaseDescriptions.female = secondaryText;
 
-                        // Simulador de descripción regional cruzada
                         cachedRegionalDescriptions.male = matchedEntries[matchedEntries.length - 1] ? matchedEntries[matchedEntries.length - 1].flavor_text.replace(/[\n\f]/g, ' ') : primaryText;
                         cachedRegionalDescriptions.female = matchedEntries[matchedEntries.length - 2] ? matchedEntries[matchedEntries.length - 2].flavor_text.replace(/[\n\f]/g, ' ') : secondaryText;
                     } else {
@@ -807,7 +821,6 @@
                 card.classList.add('poke-card');
                 card.setAttribute('data-id', i);
                 
-                // Carga inicial del estado guardado
                 if(livingDexData[i]) {
                     card.classList.add('captured');
                 }
@@ -819,18 +832,15 @@
                     <h3 id="n-${i}">N°. ${i}</h3>
                 `;
                 
-                // Al hacer clic en la tarjeta
                 card.addEventListener('click', (e) => {
                     if(e.target.classList.contains('capture-btn')) return;
                     loadPokedexData(i);
                 });
 
-                // Marcar/desmarcar de la Living Dex (Solo funciona cuando el modo está activo)
                 const captureBtn = card.querySelector('.capture-btn');
                 captureBtn.addEventListener('click', (e) => {
                     e.stopPropagation();
                     
-                    // Doble validación por seguridad
                     if (currentViewMode !== 'livingdex') return; 
 
                     const isCaptured = card.classList.toggle('captured');
@@ -882,7 +892,6 @@
             });
         });
 
-        // Inicialización
         translateUI();
         generate1025Grid();
         loadPokedexData(1);
